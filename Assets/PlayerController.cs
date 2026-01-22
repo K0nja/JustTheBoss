@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
@@ -21,26 +20,48 @@ public class PlayerController : MonoBehaviour
     private float lastDamageTime;
 
     private Rigidbody2D rb;
+    private PlayerInputActions inputActions;
     private Vector2 moveInput;
     private float nextFireTime;
     private bool isDashing;
     private float dashTimer;
     private float lastDashTime;
     private Vector2 dashDirection;
-    private bool isShooting;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        inputActions = new PlayerInputActions();
+    }
+
+    private void OnEnable()
+    {
+        inputActions.Player.Enable();
+        
+        inputActions.Player.Fire.performed += ctx => OnFirePressed();
+        inputActions.Player.Dash.performed += ctx => OnDashPressed();
+    }
+
+    private void OnDisable()
+    {
+        inputActions.Player.Disable();
+        
+        inputActions.Player.Fire.performed -= ctx => OnFirePressed();
+        inputActions.Player.Dash.performed -= ctx => OnDashPressed();
+    }
 
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
         currentHealth = maxHealth;
     }
 
     private void Update()
     {
+        moveInput = inputActions.Player.Move.ReadValue<Vector2>();
+
         if (!isDashing)
         {
-            // Shooting
-            if (isShooting && Time.time >= nextFireTime)
+            if (inputActions.Player.Fire.IsPressed() && Time.time >= nextFireTime)
             {
                 Shoot();
                 nextFireTime = Time.time + fireRate;
@@ -68,15 +89,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void OnMove(InputValue value)
+    private void OnFirePressed()
     {
-        moveInput = value.Get<Vector2>();
-        Debug.Log($"Move Input: {moveInput}"); // Add this line
+        if (Time.time >= nextFireTime)
+        {
+            Shoot();
+            nextFireTime = Time.time + fireRate;
+        }
     }
 
-    public void OnDash(InputValue value)
+    private void OnDashPressed()
     {
-        if (value.isPressed && Time.time >= lastDashTime + dashCooldown && !isDashing)
+        if (Time.time >= lastDashTime + dashCooldown && !isDashing)
         {
             StartDash();
         }
@@ -87,6 +111,7 @@ public class PlayerController : MonoBehaviour
         if (projectilePrefab != null && firePoint != null)
         {
             GameObject projectile = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+            Debug.Log("Shot fired!");
         }
     }
 
@@ -96,8 +121,9 @@ public class PlayerController : MonoBehaviour
         {
             isDashing = true;
             dashTimer = dashDuration;
-            dashDirection = moveInput;
+            dashDirection = moveInput.normalized;
             lastDashTime = Time.time;
+            Debug.Log("Dashing!");
         }
     }
 
