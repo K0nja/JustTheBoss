@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform firePoint;
     [SerializeField] private float fireRate = 0.3f;
+
+    [Header("Audio")]
+    [SerializeField] private AudioClip hitSound;
 
     [Header("Health")]
     [SerializeField] private int maxHealth = 100;
@@ -135,7 +139,14 @@ public class PlayerController : MonoBehaviour
         currentHealth -= damage;
         lastDamageTime = Time.time;
 
-        Debug.Log($"Player Health: {currentHealth}");
+        StartCoroutine(FlashEffect());
+
+        if (hitSound != null)
+        {
+            AudioSource.PlayClipAtPoint(hitSound, transform.position);
+        }
+
+         Debug.Log($"Player Health: {currentHealth}");
 
         if (currentHealth <= 0)
         {
@@ -146,9 +157,21 @@ public class PlayerController : MonoBehaviour
     private void Die()
     {
         Debug.Log("Player Died!");
-        gameObject.SetActive(false);
+        // gameObject.SetActive(false);
     }
 
     public int GetCurrentHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
+
+    private IEnumerator FlashEffect()
+    {
+        SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+        if (sprite != null)
+        {
+            Color original = sprite.color; 
+            sprite.color = Color.yellow;  
+            yield return new WaitForSeconds(0.1f);  
+            sprite.color = original;  
+        }
+    }
 }

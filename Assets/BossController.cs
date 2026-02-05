@@ -18,6 +18,9 @@ public class BossController : MonoBehaviour
     [SerializeField] private Vector2 moveRangeX = new Vector2(-6f, 6f);
     [SerializeField] private Vector2 moveRangeY = new Vector2(2f, 4f);
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip hitSound;
+
     private Transform player;
     private float attackTimer;
     private int currentPhase = 1;
@@ -177,7 +180,12 @@ public class BossController : MonoBehaviour
         currentHealth -= damage;
         Debug.Log($"Boss Health: {currentHealth}/{maxHealth}");
 
-        // Flash effect would go here
+        StartCoroutine(FlashEffect());
+
+        if (hitSound != null)
+        {
+            AudioSource.PlayClipAtPoint(hitSound, transform.position);
+        }
 
         if (currentHealth <= 0)
         {
@@ -188,10 +196,22 @@ public class BossController : MonoBehaviour
     private void Die()
     {
         Debug.Log("Boss defeated!");
-        // Victory screen will go here
+
         Destroy(gameObject);
     }
 
     public int GetCurrentHealth() => currentHealth;
     public int GetMaxHealth() => maxHealth;
+
+    private IEnumerator FlashEffect()
+    {
+        SpriteRenderer sprite = GetComponent<SpriteRenderer>();
+        if (sprite != null)
+        {
+            Color original = sprite.color; 
+            sprite.color = Color.white;  
+            yield return new WaitForSeconds(0.1f);  
+            sprite.color = original;  
+        }
+    }
 }

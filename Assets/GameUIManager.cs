@@ -23,8 +23,8 @@ public class GameUIManager : MonoBehaviour
         if (victoryPanel != null) victoryPanel.SetActive(false);
 
         // Find references if not assigned
-        if (player == null) player = FindObjectOfType<PlayerController>();
-        if (boss == null) boss = FindObjectOfType<BossController>();
+        if (player == null) player = FindFirstObjectByType<PlayerController>();
+        if (boss == null) boss = FindFirstObjectByType<BossController>();
 
         // Set max values for health bars
         if (player != null && playerHealthBar != null)
@@ -62,7 +62,7 @@ public class GameUIManager : MonoBehaviour
     private void CheckGameState()
     {
         // Check if player died
-        if (player != null && !player.gameObject.activeInHierarchy && gameOverPanel != null)
+        if (player != null && player.GetCurrentHealth() <= 0 && gameOverPanel != null && !gameOverPanel.activeInHierarchy)
         {
             ShowGameOver();
         }
@@ -73,7 +73,6 @@ public class GameUIManager : MonoBehaviour
             ShowVictory();
         }
     }
-
     private void ShowGameOver()
     {
         if (gameOverPanel != null)
@@ -94,8 +93,8 @@ public class GameUIManager : MonoBehaviour
 
     public void RestartGame()
     {
-        Time.timeScale = 1f; // Unpause
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Time.timeScale = 1f; // Unpause FIRST
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); 
     }
 
     public void QuitGame()
